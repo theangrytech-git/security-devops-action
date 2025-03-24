@@ -1,0 +1,32 @@
+name: Auto Sync with Upstream
+
+on:
+  schedule:
+    - cron: '0 2 * * 1'  # Every Monday at 2:00 AM UTC
+  workflow_dispatch:       # Optional manual run
+
+jobs:
+  sync:
+    name: Sync from microsoft/security-devops-action
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout forked repo
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GH_TOKEN }}
+          fetch-depth: 0
+
+      - name: Set Git identity
+        run: |
+          git config user.name "angrytech-sync-bot"
+          git config user.email "bot@theangrytech.dev"
+
+      - name: Add upstream and fetch
+        run: |
+          git remote add upstream https://github.com/microsoft/security-devops-action.git
+          git fetch upstream
+          git merge upstream/main --no-edit || true
+
+      - name: Push changes
+        run: git push origin main
